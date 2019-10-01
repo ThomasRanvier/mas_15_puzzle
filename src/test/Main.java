@@ -2,9 +2,9 @@ package test;
 
 public class Main {
     public static final int size = 5;
-    public static final int renderRatio = 100;
-    public static final int agentsNumber = 19;
-    public static final int agentsSleepTime = 200;
+    public static final int renderRatio = 150;
+    public static final int agentsNumber = 20;
+    public static final int agentsSleepTime = 1;
     public static final String agentPrefix = "agent_";
     public static void main(String[] args) {
         Grid grid = new Grid();
