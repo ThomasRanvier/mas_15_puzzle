@@ -11,6 +11,7 @@ public class PuzzleAgent extends Agent {
     private Position actualPos;
     private Position goalPos;
     private Grid grid;
+    private ArrayList<Position> lastPositions = new ArrayList<>();
 
     @Override
     protected void setup(){
@@ -29,6 +30,11 @@ public class PuzzleAgent extends Agent {
     }
 
     private void live() {
+        try {
+            TimeUnit.MILLISECONDS.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         while (!this.grid.isPuzzleSolved()) {
             if (!this.actualPos.equals(this.goalPos)) {
                 this.goTo(this.goalPos);
@@ -69,7 +75,7 @@ public class PuzzleAgent extends Agent {
         poses.add(new Position(this.actualPos.x - 1, this.actualPos.y));
         poses.add(new Position(this.actualPos.x, this.actualPos.y + 1));
         poses.add(new Position(this.actualPos.x, this.actualPos.y - 1));
-        Collections.shuffle(poses);
+        Collections.shuffle(poses, new Random());
         for (Position pos : poses) {
             String agentName = this.grid.agentIn(pos);
             if (Utils.isInBoundaries(pos.x, pos.y) && agentName != "") {
@@ -86,18 +92,26 @@ public class PuzzleAgent extends Agent {
         poses.add(new Position(this.actualPos.x - 1, this.actualPos.y));
         poses.add(new Position(this.actualPos.x, this.actualPos.y + 1));
         poses.add(new Position(this.actualPos.x, this.actualPos.y - 1));
-        Collections.shuffle(poses);
+        Collections.shuffle(poses, new Random());
         for (Position pos : poses) {
             String agentName = this.grid.agentIn(pos);
             if (Utils.isInBoundaries(pos.x, pos.y) && agentName == "") {
-                this.actualPos.x = pos.x;
-                this.actualPos.y = pos.y;
-                //System.out.println(this.getLocalName() + " moves to " + pos);
+                this.moveTo(pos);
+                System.out.println(this.getLocalName() + " random moves to " + pos);
                 this.sleep(2);
                 return true;
             }
         }
         return false;
+    }
+
+    private void moveTo(Position pos) {
+        this.actualPos.x = pos.x;
+        this.actualPos.y = pos.y;
+        this.lastPositions.add(new Position(this.actualPos.x, this.actualPos.y));
+        if (this.lastPositions.size() > 8) {
+            this.lastPositions.remove(0);
+        }
     }
 
     private void sleep(int multiplier) {
@@ -116,8 +130,8 @@ public class PuzzleAgent extends Agent {
         for (Position node : path) {
             String agentInPath = this.grid.agentIn(node);
             if (agentInPath.equals("")) {
-                this.actualPos.x = node.x;
-                this.actualPos.y = node.y;
+                this.moveTo(node);
+                System.out.println(this.getLocalName() + " moves to " + pos);
             } else {
                 this.requestToMoveFrom(agentInPath, node);
                 return;
@@ -131,7 +145,7 @@ public class PuzzleAgent extends Agent {
         msg.addReceiver(new AID(receiverName,AID.ISLOCALNAME));
         msg.setLanguage("English");
         msg.setContent("gtfo_from=" + pos);
-        //System.out.println(this.getLocalName() + " requests " + receiverName + " to gtfo from " + pos);
+        System.out.println(this.getLocalName() + " requests " + receiverName + " to gtfo from " + pos);
         send(msg);
     }
 
@@ -169,6 +183,9 @@ public class PuzzleAgent extends Agent {
                 }
                 double tentativeGScore = gScore.get(current) + Utils.calculateDistance(current, neighbour);
                 if (this.grid.agentIn(neighbour) != "") {
+                    tentativeGScore += 10;
+                }
+                if (this.lastPositions.contains(current)) {
                     tentativeGScore += 10;
                 }
                 if (!gScore.containsKey(neighbour)) {

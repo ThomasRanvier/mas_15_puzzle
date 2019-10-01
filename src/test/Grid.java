@@ -83,7 +83,7 @@ public class Grid {
         this.runtime = Runtime.instance();
         Profile profile = new ProfileImpl();
         profile.setParameter(Profile.MAIN_HOST, "localhost");
-        profile.setParameter(Profile.GUI, "true");
+        profile.setParameter(Profile.GUI, "false");
         ContainerController containerController = runtime.createMainContainer(profile);
         return containerController;
     }
