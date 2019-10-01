@@ -2,9 +2,6 @@ package test;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
-import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 
@@ -43,7 +40,7 @@ public class Renderer extends Thread {
             for (PuzzleAgent agent : this.agents) {
                 Position actualPos = agent.getActualPos();
                 labels[actualPos.y][actualPos.x].setText(agent.getLocalName());
-                labels[actualPos.y][actualPos.x].setBackground(agent.goalReached ? Color.green : Color.red);
+                labels[actualPos.y][actualPos.x].setBackground(agent.getActualPos().equals(agent.getGoalPos()) ? Color.green : Color.red);
             }
             frame.repaint();
             frame.pack();

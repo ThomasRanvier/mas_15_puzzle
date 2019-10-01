@@ -17,8 +17,10 @@ public class Grid {
     Runtime runtime;
     private final Lock lock = new ReentrantLock(true);
     private Set<PuzzleAgent> puzzleAgents = new HashSet<>();
+    private boolean puzzleSolved;
 
     public Grid() {
+        puzzleSolved = false;
         ContainerController containerController = this.initJade();
         this.initialiseMap(containerController);
     }
@@ -86,21 +88,42 @@ public class Grid {
         return containerController;
     }
 
-    public boolean agentIn(Position pos) {
+    public String agentIn(Position pos) {
         lock.lock();
         try {
             for (PuzzleAgent a : this.puzzleAgents) {
                 if (a.getActualPos().x == pos.x && a.getActualPos().y == pos.y) {
-                    return true;
+                    return a.getLocalName();
                 }
             }
-            return false;
+            return "";
         } catch (Exception e) {
             System.err.println("Several threads trying to access method registerAgent");
         } finally {
             lock.unlock();
         }
-        return false;
+        return "";
+    }
+
+    public boolean isPuzzleSolved() {
+        lock.lock();
+        try {
+            if (this.puzzleSolved) {
+                return true;
+            }
+            for (PuzzleAgent a : this.puzzleAgents) {
+                if (!a.getActualPos().equals(a.getGoalPos())) {
+                    return false;
+                }
+            }
+            this.puzzleSolved = true;
+            return true;
+        } catch (Exception e) {
+            System.err.println("Several threads trying to access method registerAgent");
+        } finally {
+            lock.unlock();
+        }
+        return this.puzzleSolved;
     }
 
     public HashSet<PuzzleAgent> getAgents() {

@@ -45,7 +45,7 @@ public class Utils {
         return neighbours;
     }
 
-    private static boolean isInBoundaries(int x, int y) {
+    public static boolean isInBoundaries(int x, int y) {
         return x >= 0 && y >= 0 && x < Main.size && y < Main.size;
     }
 
