@@ -4,10 +4,7 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class PuzzleAgent extends Agent {
@@ -50,7 +47,7 @@ public class PuzzleAgent extends Agent {
             ACLMessage msg = receive();
             if (msg != null) {
                 String[] infos = msg.getContent().split("=");
-                System.out.println(this.getLocalName() + " requested to " + msg.getContent());
+                //System.out.println(this.getLocalName() + " requested to " + msg.getContent());
                 if (infos[0].equals("gtfo_from")) {
                     if (this.actualPos.toString().equals(infos[1])) {
                         if (!this.randomMove()) {
@@ -67,76 +64,38 @@ public class PuzzleAgent extends Agent {
     }
 
     private void requestToMoveAround() {
-        int newX = this.actualPos.x;
-        int newY = this.actualPos.y - 1;
-        Position pos = new Position(newX, newY);
-        String agentName = this.grid.agentIn(pos);
-        if (Utils.isInBoundaries(newX, newY) && agentName != "") {
-            System.out.println(this.getLocalName() + " can't move");
-            this.requestToMoveFrom(agentName, pos);
-            return;
-        }
-        newX = this.actualPos.x;
-        newY = this.actualPos.y + 1;
-        pos = new Position(newX, newY);
-        agentName = this.grid.agentIn(pos);
-        if (Utils.isInBoundaries(newX, newY) && agentName != "") {
-            System.out.println(this.getLocalName() + " can't move");
-            this.requestToMoveFrom(agentName, pos);
-            return;
-        }
-        newX = this.actualPos.x - 1;
-        newY = this.actualPos.y;
-        pos = new Position(newX, newY);
-        agentName = this.grid.agentIn(pos);
-        if (Utils.isInBoundaries(newX, newY) && agentName != "") {
-            System.out.println(this.getLocalName() + " can't move");
-            this.requestToMoveFrom(agentName, pos);
-            return;
-        }
-        newX = this.actualPos.x + 1;
-        newY = this.actualPos.y;
-        pos = new Position(newX, newY);
-        agentName = this.grid.agentIn(pos);
-        if (Utils.isInBoundaries(newX, newY) && agentName != "") {
-            System.out.println(this.getLocalName() + " can't move");
-            this.requestToMoveFrom(agentName, pos);
-            return;
+        List<Position> poses = new ArrayList<>();
+        poses.add(new Position(this.actualPos.x + 1, this.actualPos.y));
+        poses.add(new Position(this.actualPos.x - 1, this.actualPos.y));
+        poses.add(new Position(this.actualPos.x, this.actualPos.y + 1));
+        poses.add(new Position(this.actualPos.x, this.actualPos.y - 1));
+        Collections.shuffle(poses);
+        for (Position pos : poses) {
+            String agentName = this.grid.agentIn(pos);
+            if (Utils.isInBoundaries(pos.x, pos.y) && agentName != "") {
+                //System.out.println(this.getLocalName() + " can't go in " + pos);
+                this.requestToMoveFrom(agentName, pos);
+                return;
+            }
         }
     }
 
     private boolean randomMove() {
-        int newX = this.actualPos.x;
-        int newY = this.actualPos.y - 1;
-        if (Utils.isInBoundaries(newX, newY) && this.grid.agentIn(new Position(newX, newY)) == "") {
-            this.actualPos.y--;
-            System.out.println(this.getLocalName() + " moves to x:" + newX + ",y:" + newY);
-            this.sleep(2);
-            return true;
-        }
-        newX = this.actualPos.x;
-        newY = this.actualPos.y + 1;
-        if (Utils.isInBoundaries(newX, newY) && this.grid.agentIn(new Position(newX, newY)) == "") {
-            this.actualPos.y++;
-            System.out.println(this.getLocalName() + " moves to x:" + newX + ",y:" + newY);
-            this.sleep(2);
-            return true;
-        }
-        newX = this.actualPos.x - 1;
-        newY = this.actualPos.y;
-        if (Utils.isInBoundaries(newX, newY) && this.grid.agentIn(new Position(newX, newY)) == "") {
-            this.actualPos.x--;
-            System.out.println(this.getLocalName() + " moves to x:" + newX + ",y:" + newY);
-            this.sleep(2);
-            return true;
-        }
-        newX = this.actualPos.x + 1;
-        newY = this.actualPos.y;
-        if (Utils.isInBoundaries(newX, newY) && this.grid.agentIn(new Position(newX, newY)) == "") {
-            this.actualPos.x++;
-            System.out.println(this.getLocalName() + " moves to x:" + newX + ",y:" + newY);
-            this.sleep(2);
-            return true;
+        List<Position> poses = new ArrayList<>();
+        poses.add(new Position(this.actualPos.x + 1, this.actualPos.y));
+        poses.add(new Position(this.actualPos.x - 1, this.actualPos.y));
+        poses.add(new Position(this.actualPos.x, this.actualPos.y + 1));
+        poses.add(new Position(this.actualPos.x, this.actualPos.y - 1));
+        Collections.shuffle(poses);
+        for (Position pos : poses) {
+            String agentName = this.grid.agentIn(pos);
+            if (Utils.isInBoundaries(pos.x, pos.y) && agentName == "") {
+                this.actualPos.x = pos.x;
+                this.actualPos.y = pos.y;
+                //System.out.println(this.getLocalName() + " moves to " + pos);
+                this.sleep(2);
+                return true;
+            }
         }
         return false;
     }
@@ -172,13 +131,13 @@ public class PuzzleAgent extends Agent {
         msg.addReceiver(new AID(receiverName,AID.ISLOCALNAME));
         msg.setLanguage("English");
         msg.setContent("gtfo_from=" + pos);
-        System.out.println(this.getLocalName() + " requests " + receiverName + " to gtfo from " + pos);
+        //System.out.println(this.getLocalName() + " requests " + receiverName + " to gtfo from " + pos);
         send(msg);
     }
 
     @Override
     protected void takeDown() {
-        System.out.println("Taking down " + this.getLocalName());
+        //System.out.println("Taking down " + this.getLocalName());
         super.takeDown();
     }
 

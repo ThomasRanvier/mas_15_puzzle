@@ -20,7 +20,7 @@ public class Grid {
     private boolean puzzleSolved;
 
     public Grid() {
-        puzzleSolved = false;
+        this.puzzleSolved = false;
         ContainerController containerController = this.initJade();
         this.initialiseMap(containerController);
     }
