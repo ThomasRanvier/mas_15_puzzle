@@ -18,10 +18,12 @@ public class Grid {
     private final Lock lock = new ReentrantLock(true);
     private Set<PuzzleAgent> puzzleAgents = new HashSet<>();
     private boolean puzzleSolved;
+    private long start;
 
     public Grid() {
         this.puzzleSolved = false;
         ContainerController containerController = this.initJade();
+        this.start = System.currentTimeMillis();
         this.initialiseMap(containerController);
     }
 
@@ -29,8 +31,8 @@ public class Grid {
         Random randomiser = new Random();
         Set<Position> initCells = new HashSet<>();
         Set<Position> goalCells = new HashSet<>();
-        for (int x = 0; x < Main.size; x++) {
-            for (int y = 0; y < Main.size; y++) {
+        for (int x = 0; x < Main.sizeW; x++) {
+            for (int y = 0; y < Main.sizeH; y++) {
                 initCells.add(new Position(x, y));
                 goalCells.add(new Position(x, y));
             }
@@ -88,21 +90,21 @@ public class Grid {
         return containerController;
     }
 
-    public String agentIn(Position pos) {
+    public PuzzleAgent agentIn(Position pos) {
         lock.lock();
         try {
             for (PuzzleAgent a : this.puzzleAgents) {
                 if (a.getActualPos().x == pos.x && a.getActualPos().y == pos.y) {
-                    return a.getLocalName();
+                    return a;
                 }
             }
-            return "";
+            return null;
         } catch (Exception e) {
             System.err.println("Several threads trying to access method registerAgent");
         } finally {
             lock.unlock();
         }
-        return "";
+        return null;
     }
 
     public boolean isPuzzleSolved() {
@@ -117,6 +119,7 @@ public class Grid {
                 }
             }
             this.puzzleSolved = true;
+            System.out.println("Fin en : " + ((System.currentTimeMillis() - this.start) / 1000.0) + "s");
             return true;
         } catch (Exception e) {
             System.err.println("Several threads trying to access method registerAgent");

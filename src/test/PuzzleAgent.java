@@ -30,20 +30,13 @@ public class PuzzleAgent extends Agent {
     }
 
     private void live() {
-        try {
-            TimeUnit.MILLISECONDS.sleep(500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        this.sleep(2);
         while (!this.grid.isPuzzleSolved()) {
             if (!this.actualPos.equals(this.goalPos)) {
                 this.goTo(this.goalPos);
-                this.moveIfRequested();
-            } else {
-                this.moveIfRequested();
             }
+            this.moveIfRequested();
         }
-        System.out.println("Finished");
         this.doDelete();
     }
 
@@ -53,11 +46,10 @@ public class PuzzleAgent extends Agent {
             ACLMessage msg = receive();
             if (msg != null) {
                 String[] infos = msg.getContent().split("=");
-                //System.out.println(this.getLocalName() + " requested to " + msg.getContent());
                 if (infos[0].equals("gtfo_from")) {
                     if (this.actualPos.toString().equals(infos[1])) {
                         if (!this.randomMove()) {
-                            this.requestToMoveAround();
+                            this.requestNeighbourToMove();
                         }
                     } // Else : already moved from there
                 } else {
@@ -69,7 +61,7 @@ public class PuzzleAgent extends Agent {
         }
     }
 
-    private void requestToMoveAround() {
+    private void requestNeighbourToMove() {
         List<Position> poses = new ArrayList<>();
         poses.add(new Position(this.actualPos.x + 1, this.actualPos.y));
         poses.add(new Position(this.actualPos.x - 1, this.actualPos.y));
@@ -77,10 +69,9 @@ public class PuzzleAgent extends Agent {
         poses.add(new Position(this.actualPos.x, this.actualPos.y - 1));
         Collections.shuffle(poses, new Random());
         for (Position pos : poses) {
-            String agentName = this.grid.agentIn(pos);
-            if (Utils.isInBoundaries(pos.x, pos.y) && agentName != "") {
-                //System.out.println(this.getLocalName() + " can't go in " + pos);
-                this.requestToMoveFrom(agentName, pos);
+            PuzzleAgent agent = this.grid.agentIn(pos);
+            if (Utils.isInBoundaries(pos.x, pos.y) && agent != null) {
+                this.requestToMoveFrom(agent.getLocalName(), pos);
                 return;
             }
         }
@@ -94,10 +85,9 @@ public class PuzzleAgent extends Agent {
         poses.add(new Position(this.actualPos.x, this.actualPos.y - 1));
         Collections.shuffle(poses, new Random());
         for (Position pos : poses) {
-            String agentName = this.grid.agentIn(pos);
-            if (Utils.isInBoundaries(pos.x, pos.y) && agentName == "") {
+            PuzzleAgent agent = this.grid.agentIn(pos);
+            if (Utils.isInBoundaries(pos.x, pos.y) && agent == null) {
                 this.moveTo(pos);
-                System.out.println(this.getLocalName() + " random moves to " + pos);
                 this.sleep(2);
                 return true;
             }
@@ -109,7 +99,7 @@ public class PuzzleAgent extends Agent {
         this.actualPos.x = pos.x;
         this.actualPos.y = pos.y;
         this.lastPositions.add(new Position(this.actualPos.x, this.actualPos.y));
-        if (this.lastPositions.size() > 8) {
+        if (this.lastPositions.size() > Main.historySize) {
             this.lastPositions.remove(0);
         }
     }
@@ -123,17 +113,13 @@ public class PuzzleAgent extends Agent {
     }
 
     private void goTo(Position pos) {
-        List<Position> path = null;
-        while(path == null) {
-            path = this.aStar(this.actualPos, pos);
-        }
+        List<Position> path = this.aStar(this.actualPos, pos);
         for (Position node : path) {
-            String agentInPath = this.grid.agentIn(node);
-            if (agentInPath.equals("")) {
+            PuzzleAgent agent = this.grid.agentIn(node);
+            if (agent == null) {
                 this.moveTo(node);
-                System.out.println(this.getLocalName() + " moves to " + pos);
             } else {
-                this.requestToMoveFrom(agentInPath, node);
+                this.requestToMoveFrom(agent.getLocalName(), node);
                 return;
             }
             this.sleep(1);
@@ -145,7 +131,6 @@ public class PuzzleAgent extends Agent {
         msg.addReceiver(new AID(receiverName,AID.ISLOCALNAME));
         msg.setLanguage("English");
         msg.setContent("gtfo_from=" + pos);
-        System.out.println(this.getLocalName() + " requests " + receiverName + " to gtfo from " + pos);
         send(msg);
     }
 
@@ -182,11 +167,15 @@ public class PuzzleAgent extends Agent {
                     continue;
                 }
                 double tentativeGScore = gScore.get(current) + Utils.calculateDistance(current, neighbour);
-                if (this.grid.agentIn(neighbour) != "") {
-                    tentativeGScore += 10;
+                PuzzleAgent agent = this.grid.agentIn(neighbour);
+                if (agent != null) {
+                    tentativeGScore += Main.agentWeight;
+                    if (agent.getActualPos().equals(agent.getGoalPos())) {
+                        tentativeGScore += Main.reachedGoalWeight;
+                    }
                 }
-                if (this.lastPositions.contains(current)) {
-                    tentativeGScore += 10;
+                if (this.lastPositions.contains(current) && !current.equals(goal)) {
+                    tentativeGScore += Collections.frequency(this.lastPositions, current) * 10;
                 }
                 if (!gScore.containsKey(neighbour)) {
                     gScore.put(neighbour, Double.POSITIVE_INFINITY);

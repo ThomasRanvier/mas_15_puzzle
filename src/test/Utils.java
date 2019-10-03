@@ -1,7 +1,5 @@
 package test;
 
-import jdk.jshell.execution.Util;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +44,7 @@ public class Utils {
     }
 
     public static boolean isInBoundaries(int x, int y) {
-        return x >= 0 && y >= 0 && x < Main.size && y < Main.size;
+        return x >= 0 && y >= 0 && x < Main.sizeW && y < Main.sizeH;
     }
 
     public static LinkedList<Position> reconstructPath(Map<Position, Position> cameFrom, Position current) {
