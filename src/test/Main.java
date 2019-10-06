@@ -1,5 +1,7 @@
 package test;
 
+import java.util.concurrent.TimeUnit;
+
 public class Main {
     public static final int sizeW = 5;
     public static final int sizeH = 5;

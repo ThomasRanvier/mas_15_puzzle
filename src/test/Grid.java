@@ -119,7 +119,7 @@ public class Grid {
                 }
             }
             this.puzzleSolved = true;
-            System.out.println("Fin en : " + ((System.currentTimeMillis() - this.start) / 1000.0) + "s");
+            System.out.println("End after " + ((System.currentTimeMillis() - this.start) / 1000.0) + "s");
             return true;
         } catch (Exception e) {
             System.err.println("Several threads trying to access method registerAgent");
